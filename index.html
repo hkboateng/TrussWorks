@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Bootstrap demo</title>
+        <script src="js/bootstrap.min.js"></script>
+        <link rel="stylesheet" href="css/bootstrap.min.css" />
+    </head>
+    <script>
+        window.onload = function() {
+            document.getElementById('results-container').style.display = 'none';
+        };
+        async function getSwapiData(url){
+
+            const response = await fetch(url)
+            
+            const data = await response.json()
+            
+            if(response){
+                hideloader()
+                showtable();
+                populateTable(data.results)
+            }else{
+                hideloader()
+                document.getElementById('results-container').style.display = 'block';
+                document.getElementById("results-container").innerHTML=`<div class="text-bg-danger p-3">Error occured</div>`
+            }
+
+        }
+        
+        getSwapiData('https://swapi.dev/api/planets/')
+        function hideloader() {
+            document.getElementById('loading').style.display = 'none';
+            
+        }
+        function showtable(){
+            document.getElementById('results-container').style.display = 'block';
+        }
+        function hideTableDiv(){
+            document.getElementById('results-container').style.display = 'none';
+        }
+
+        function calc_surface_area(climate){
+            let surface_area = 0
+            if(transform_unknow_vals(climate.diameter) == "?" || transform_unknow_vals(climate.surface_water) == "?"){
+                surface_area = Math.round(climate.diameter)
+            }else{
+                surface_area = Math.round(climate.diameter - ((climate.surface_water /100) * climate.diameter))
+            }
+            
+            return String(surface_area).replace(/(.)(?=(\d{3})+$)/g,'$1 ')
+        }
+
+        function transform_unknow_vals(val){
+            if(val === "unknown" || val === "NaN"){
+                return "?"
+            }else{
+                return val
+            }
+        }
+        function populateTable(dataset){
+
+            dataset = dataset.sort(function(a, b){
+                const c1 = a.name.toLowerCase()
+                const c2 = b.name.toLowerCase()
+                if (c1 < c2) {return -1;}
+                if (c1 > c2) {return 1;}
+                return 0
+            });
+            let table_data = `<tr>
+                    <th>Planet</th>
+                    <th>Climate</th>
+                    <th>Terrain</th>
+                    <th>Total Residence</th>
+                    <th>Population</th>
+                    <th>Square Surface (in km2)</th>
+                </tr>`;
+            for (let r of dataset){
+                table_data += `<tr>
+                    <td><a href="${transform_unknow_vals(r.url)}"  target="_blank">${transform_unknow_vals(r.name)}</a> </td>
+                    <td>${transform_unknow_vals(r.climate)}</td>
+                    <td>${transform_unknow_vals(r.terrain)}</td>
+                    <td>${transform_unknow_vals(r.residents.length)}</td>
+                    <td>${transform_unknow_vals(r.population)} </td>
+                    <td>${transform_unknow_vals(calc_surface_area(r))} </td>
+                    </tr>`
+            }
+            document.getElementById("results-table").innerHTML=table_data
+        }
+    </script>
+    <body>
+        <div class="container-fluid">
+            <div class="d-flex justify-content-center">
+                <div class="spinner-border" 
+                     role="status" id="loading">
+                    <span class="sr-only">Loading...</span>
+                    <h3>Loading</h3>
+                </div>
+            </div>
+            <div id="results-container">
+                <h2>Results Data</h2>
+                <table id="results-table" class="table table-bordered">
+                        
+                </table>
+            </div>
+            <div>
+                
+            </div>
+        </div>
+    </body>
+</html>
